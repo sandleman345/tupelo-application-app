@@ -73,7 +73,10 @@ export async function POST(req: Request) {
     const brandColor =
       data.company === "Tupelo Tea" ? "#d97706" : "#4d7c0f";
 
-    const dashboardUrl = "http://localhost:3000/dashboard";
+    const dashboardUrl =
+  process.env.NODE_ENV === "production"
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/dashboard`
+    : "http://localhost:3000/dashboard";
 
     const emailResult = await resend.emails.send({
       from: "Applications <onboarding@resend.dev>",
