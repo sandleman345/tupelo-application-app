@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
     const dashboardUrl =
   process.env.NODE_ENV === "production"
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/dashboard`
+    ? "https://tupelo-application-app.vercel.app/dashboard"
     : "http://localhost:3000/dashboard";
 
     const emailResult = await resend.emails.send({
