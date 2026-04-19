@@ -79,8 +79,11 @@ export async function POST(req: Request) {
     : "http://localhost:3000/dashboard";
 
     const emailResult = await resend.emails.send({
-      from: "Applications <onboarding@resend.dev>",
-      to: ["donna@donnaharper.name"],
+      from: "Applications <jobs@blueridgeoliveoil.com>",
+      to: [
+  "tom@tomharper.name",
+  "donna@blueridgeoliveoil.com"
+],
       subject: `New Application - ${data.full_name}`,
       html: `
         <div style="margin:0; padding:24px; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif; color:#111827;">
