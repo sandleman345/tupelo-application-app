@@ -80,10 +80,7 @@ export async function POST(req: Request) {
 
     const emailResult = await resend.emails.send({
       from: "Applications <onboarding@resend.dev>",
-      to: [
-  "tom@tomharper.name",
-  "donna@blueridgeoliveoil.com"
-],
+      to: ["tom@tomharper.name"],
       subject: `New Application - ${data.full_name}`,
       html: `
         <div style="margin:0; padding:24px; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif; color:#111827;">
