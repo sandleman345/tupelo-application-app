@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     const emailResult = await resend.emails.send({
       from: "Applications <jobs@blueridgeoliveoil.com>",
       to: [
-  "tom@tomharper.name",
+  "tom@blueridgeoliveoil.com",
   "donna@blueridgeoliveoil.com"
 ],
       subject: `New Application - ${data.full_name}`,
