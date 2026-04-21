@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Application } from "./page";
+import type { Application, WorkHistoryItem } from "./page";
 
 function formatDate(value?: string) {
   if (!value) return "—";
@@ -65,6 +65,30 @@ function Badge({
   );
 }
 
+function WorkHistoryCard({ job, index }: { job: WorkHistoryItem; index: number }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+      <div className="mb-3 text-sm font-bold text-gray-900">
+        Employer {index + 1}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <DetailRow label="Company Name" value={job.company_name} tinted />
+        <DetailRow label="Position" value={job.position} tinted />
+        <DetailRow label="Company Phone" value={job.company_phone} />
+        <DetailRow label="May We Contact?" value={job.may_contact_reference} />
+        <DetailRow label="Start Date" value={formatDate(job.start_date)} />
+        <DetailRow label="End Date" value={formatDate(job.end_date)} />
+      </div>
+
+      <div className="mt-4 grid gap-4">
+        <DetailRow label="Responsibilities" value={job.responsibilities} />
+        <DetailRow label="Reason for Leaving" value={job.reason_for_leaving} />
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardClient({
   applications,
 }: {
@@ -85,6 +109,9 @@ export default function DashboardClient({
       const matchesCompany =
         companyFilter === "All" || app.company === companyFilter;
 
+      const workHistoryText =
+        app.work_history?.map((job) => [job.company_name, job.position].join(" ")).join(" ") || "";
+
       const haystack = [
         app.full_name,
         app.email,
@@ -93,6 +120,7 @@ export default function DashboardClient({
         app.preferred_location,
         app.referred_by,
         app.employment_type,
+        workHistoryText,
       ]
         .filter(Boolean)
         .join(" ")
@@ -156,7 +184,7 @@ export default function DashboardClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, location, referral, or employment type"
+            placeholder="Search by name, email, location, referral, employment type, or company name"
             className="w-full rounded-xl border border-gray-300 bg-white p-3 text-black outline-none focus:border-gray-800"
           />
         </div>
@@ -280,11 +308,6 @@ export default function DashboardClient({
 
                 <div className="mt-4 grid gap-4">
                   <DetailRow
-                    label="Previous Work Experience"
-                    value={app.work_experience}
-                    tinted
-                  />
-                  <DetailRow
                     label="Computer / Retail System Experience"
                     value={app.computer_experience}
                   />
@@ -293,6 +316,26 @@ export default function DashboardClient({
                     value={app.why_company}
                     tinted
                   />
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="mb-4 text-lg font-bold text-gray-900">
+                    Work History
+                  </h3>
+
+                  <div className="space-y-4">
+                    {app.work_history && app.work_history.length > 0 ? (
+                      [...app.work_history]
+                        .sort((a, b) => a.sort_order - b.sort_order)
+                        .map((job, index) => (
+                          <WorkHistoryCard key={job.id} job={job} index={index} />
+                        ))
+                    ) : (
+                      <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                        No work history provided.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </details>

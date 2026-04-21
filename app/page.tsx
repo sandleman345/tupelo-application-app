@@ -5,6 +5,18 @@ import { useMemo, useRef, useState } from "react";
 
 type Company = "Blue Ridge Olive Oil Company" | "Tupelo Tea" | "";
 type EmploymentType = "Full-Time" | "Part-Time" | "";
+type YesNo = "Yes" | "No" | "";
+
+type WorkHistoryItem = {
+  company_name: string;
+  position: string;
+  company_phone: string;
+  responsibilities: string;
+  start_date: string;
+  end_date: string;
+  reason_for_leaving: string;
+  may_contact_reference: YesNo;
+};
 
 type FormData = {
   company: Company;
@@ -20,7 +32,7 @@ type FormData = {
   employment_type: EmploymentType;
   weekend_availability: string;
   start_date: string;
-  work_experience: string;
+  work_history: WorkHistoryItem[];
   computer_experience: string;
   why_company: string;
   enjoys_public_interaction: string;
@@ -29,6 +41,17 @@ type FormData = {
   signature: string;
   application_date: string;
 };
+
+const emptyWorkHistoryItem = (): WorkHistoryItem => ({
+  company_name: "",
+  position: "",
+  company_phone: "",
+  responsibilities: "",
+  start_date: "",
+  end_date: "",
+  reason_for_leaving: "",
+  may_contact_reference: "",
+});
 
 const initialForm: FormData = {
   company: "",
@@ -44,7 +67,7 @@ const initialForm: FormData = {
   employment_type: "",
   weekend_availability: "",
   start_date: "",
-  work_experience: "",
+  work_history: [emptyWorkHistoryItem()],
   computer_experience: "",
   why_company: "",
   enjoys_public_interaction: "",
@@ -151,6 +174,42 @@ export default function Home() {
     }
   };
 
+  const updateWorkHistoryField = (
+    index: number,
+    field: keyof WorkHistoryItem,
+    value: string
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      work_history: prev.work_history.map((job, i) =>
+        i === index
+          ? {
+              ...job,
+              [field]:
+                field === "company_phone" ? formatPhoneInput(value) : value,
+            }
+          : job
+      ),
+    }));
+  };
+
+  const addWorkHistoryItem = () => {
+    setForm((prev) => ({
+      ...prev,
+      work_history: [...prev.work_history, emptyWorkHistoryItem()],
+    }));
+  };
+
+  const removeWorkHistoryItem = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      work_history:
+        prev.work_history.length === 1
+          ? [emptyWorkHistoryItem()]
+          : prev.work_history.filter((_, i) => i !== index),
+    }));
+  };
+
   const chooseCompany = (company: Company) => {
     setForm({
       ...initialForm,
@@ -179,8 +238,17 @@ export default function Home() {
     form.start_date.trim() &&
     (form.company === "Tupelo Tea" || form.preferred_location.trim());
 
+  const hasValidFirstJob =
+    form.work_history[0]?.company_name.trim() &&
+    form.work_history[0]?.position.trim() &&
+    form.work_history[0]?.responsibilities.trim() &&
+    form.work_history[0]?.start_date.trim() &&
+    form.work_history[0]?.end_date.trim() &&
+    form.work_history[0]?.reason_for_leaving.trim() &&
+    form.work_history[0]?.may_contact_reference.trim();
+
   const canContinueStep3 =
-    form.work_experience.trim() &&
+    hasValidFirstJob &&
     form.computer_experience.trim() &&
     form.why_company.trim();
 
@@ -587,21 +655,192 @@ export default function Home() {
           {step === 3 && (
             <div className={sectionCardClass}>
               <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
-                Experience & Background
+                Work History
               </h2>
 
               <div className="space-y-5">
-                <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
-                  <label className={labelClass}>Previous Work Experience</label>
-                  <textarea
-                    name="work_experience"
-                    value={form.work_experience}
-                    onChange={updateField}
-                    rows={5}
-                    className={inputClass}
-                    required
-                  />
-                </div>
+                {form.work_history.map((job, index) => (
+                  <div
+                    key={index}
+                    className={`rounded-2xl border p-4 sm:p-5 ${theme.softCard}`}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className={`text-base font-bold ${theme.text}`}>
+                        Employer {index + 1}
+                      </h3>
+                      {form.work_history.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeWorkHistoryItem(index)}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className={labelClass}>Company Name</label>
+                          <input
+                            value={job.company_name}
+                            onChange={(e) =>
+                              updateWorkHistoryField(
+                                index,
+                                "company_name",
+                                e.target.value
+                              )
+                            }
+                            className={inputClass}
+                            required={index === 0}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={labelClass}>Position</label>
+                          <input
+                            value={job.position}
+                            onChange={(e) =>
+                              updateWorkHistoryField(
+                                index,
+                                "position",
+                                e.target.value
+                              )
+                            }
+                            className={inputClass}
+                            required={index === 0}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Company Phone Number</label>
+                        <input
+                          type="tel"
+                          value={job.company_phone}
+                          onChange={(e) =>
+                            updateWorkHistoryField(
+                              index,
+                              "company_phone",
+                              e.target.value
+                            )
+                          }
+                          className={inputClass}
+                          inputMode="tel"
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Responsibilities</label>
+                        <textarea
+                          value={job.responsibilities}
+                          onChange={(e) =>
+                            updateWorkHistoryField(
+                              index,
+                              "responsibilities",
+                              e.target.value
+                            )
+                          }
+                          rows={4}
+                          className={inputClass}
+                          required={index === 0}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className={labelClass}>Start Date</label>
+                          <input
+                            type="date"
+                            value={job.start_date}
+                            onChange={(e) =>
+                              updateWorkHistoryField(
+                                index,
+                                "start_date",
+                                e.target.value
+                              )
+                            }
+                            className={inputClass}
+                            required={index === 0}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={labelClass}>End Date</label>
+                          <input
+                            type="date"
+                            value={job.end_date}
+                            onChange={(e) =>
+                              updateWorkHistoryField(
+                                index,
+                                "end_date",
+                                e.target.value
+                              )
+                            }
+                            className={inputClass}
+                            required={index === 0}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Reason for Leaving</label>
+                        <textarea
+                          value={job.reason_for_leaving}
+                          onChange={(e) =>
+                            updateWorkHistoryField(
+                              index,
+                              "reason_for_leaving",
+                              e.target.value
+                            )
+                          }
+                          rows={3}
+                          className={inputClass}
+                          required={index === 0}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>
+                          May We Contact for Reference?
+                        </label>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {["Yes", "No"].map((option) => (
+                            <label
+                              key={option}
+                              className="flex items-center gap-3 rounded-xl border border-white/70 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-sm"
+                            >
+                              <input
+                                type="radio"
+                                name={`may_contact_reference_${index}`}
+                                value={option}
+                                checked={job.may_contact_reference === option}
+                                onChange={(e) =>
+                                  updateWorkHistoryField(
+                                    index,
+                                    "may_contact_reference",
+                                    e.target.value
+                                  )
+                                }
+                                className="h-4 w-4"
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={addWorkHistoryItem}
+                  className="rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                  + Add Another Employer
+                </button>
 
                 <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
                   <label className={labelClass}>

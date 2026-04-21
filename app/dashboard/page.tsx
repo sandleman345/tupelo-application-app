@@ -5,7 +5,7 @@ import DashboardClient from "./DashboardClient";
 import LogoutButton from "./LogoutButton";
 
 export type Application = {
-  id: number;
+  id: string;
   created_at: string;
   company: string;
   full_name: string;
@@ -17,7 +17,6 @@ export type Application = {
   employment_type: string;
   weekend_availability: string;
   start_date: string;
-  work_experience: string;
   computer_experience: string;
   why_company: string;
   enjoys_public_interaction: string;
@@ -25,6 +24,21 @@ export type Application = {
   non_smoking_acknowledged: string;
   signature: string;
   application_date: string;
+  work_history?: WorkHistoryItem[];
+};
+
+export type WorkHistoryItem = {
+  id: number;
+  application_id: string;
+  sort_order: number;
+  company_name: string;
+  position: string;
+  company_phone: string;
+  responsibilities: string;
+  start_date: string;
+  end_date: string;
+  reason_for_leaving: string;
+  may_contact_reference: string;
 };
 
 function getSupabase() {
@@ -43,7 +57,22 @@ async function getApplications(): Promise<Application[]> {
 
   const { data, error } = await supabase
     .from("applications")
-    .select("*")
+    .select(`
+      *,
+      work_history:application_work_history (
+        id,
+        application_id,
+        sort_order,
+        company_name,
+        position,
+        company_phone,
+        responsibilities,
+        start_date,
+        end_date,
+        reason_for_leaving,
+        may_contact_reference
+      )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {

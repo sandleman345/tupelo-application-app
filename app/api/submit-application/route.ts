@@ -51,7 +51,6 @@ export async function POST(req: Request) {
       employment_type: data.employment_type,
       weekend_availability: data.weekend_availability,
       start_date: data.start_date,
-      work_experience: data.work_experience,
       computer_experience: data.computer_experience,
       why_company: data.why_company,
       enjoys_public_interaction: data.enjoys_public_interaction,
@@ -62,13 +61,60 @@ export async function POST(req: Request) {
       application_date: data.application_date,
     };
 
-    const { error } = await supabase
+    const { data: applicationInsert, error } = await supabase
       .from("applications")
-      .insert([insertData]);
+      .insert([insertData])
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !applicationInsert) {
       console.error("Supabase insert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error?.message || "Failed to create application" },
+        { status: 500 }
+      );
+    }
+
+    const workHistoryRows =
+      Array.isArray(data.work_history) && data.work_history.length > 0
+        ? data.work_history
+            .filter(
+              (job: any) =>
+                job.company_name ||
+                job.position ||
+                job.company_phone ||
+                job.responsibilities ||
+                job.start_date ||
+                job.end_date ||
+                job.reason_for_leaving ||
+                job.may_contact_reference
+            )
+            .map((job: any, index: number) => ({
+              application_id: applicationInsert.id,
+              sort_order: index,
+              company_name: job.company_name || "",
+              position: job.position || "",
+              company_phone: formatPhone(job.company_phone || ""),
+              responsibilities: job.responsibilities || "",
+              start_date: job.start_date || null,
+              end_date: job.end_date || null,
+              reason_for_leaving: job.reason_for_leaving || "",
+              may_contact_reference: job.may_contact_reference || "",
+            }))
+        : [];
+
+    if (workHistoryRows.length > 0) {
+      const { error: workHistoryError } = await supabase
+        .from("application_work_history")
+        .insert(workHistoryRows);
+
+      if (workHistoryError) {
+        console.error("Work history insert error:", workHistoryError);
+        return NextResponse.json(
+          { error: workHistoryError.message },
+          { status: 500 }
+        );
+      }
     }
 
     const brandColor =
@@ -78,6 +124,29 @@ export async function POST(req: Request) {
       process.env.NODE_ENV === "production"
         ? "https://tupelo-application-app.vercel.app/dashboard"
         : "http://localhost:3000/dashboard";
+
+    const workHistoryHtml =
+      workHistoryRows.length > 0
+        ? workHistoryRows
+            .map(
+              (job, index) => `
+                <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px; background:${index % 2 === 0 ? "#f9fafb" : "#ffffff"};">
+                  <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;">Employer ${index + 1}</div>
+                  <p style="margin:4px 0;"><strong>Company:</strong> ${job.company_name || "—"}</p>
+                  <p style="margin:4px 0;"><strong>Position:</strong> ${job.position || "—"}</p>
+                  <p style="margin:4px 0;"><strong>Company Phone:</strong> ${job.company_phone || "—"}</p>
+                  <p style="margin:4px 0;"><strong>Start Date:</strong> ${job.start_date || "—"}</p>
+                  <p style="margin:4px 0;"><strong>End Date:</strong> ${job.end_date || "—"}</p>
+                  <p style="margin:4px 0;"><strong>May We Contact:</strong> ${job.may_contact_reference || "—"}</p>
+                  <p style="margin:8px 0 4px;"><strong>Responsibilities:</strong></p>
+                  <div style="white-space:pre-wrap; line-height:1.6;">${job.responsibilities || "—"}</div>
+                  <p style="margin:8px 0 4px;"><strong>Reason for Leaving:</strong></p>
+                  <div style="white-space:pre-wrap; line-height:1.6;">${job.reason_for_leaving || "—"}</div>
+                </div>
+              `
+            )
+            .join("")
+        : `<div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; background:#f9fafb;">No work history provided.</div>`;
 
     const emailResult = await resend.emails.send({
       from: "Applications <jobs@blueridgeoliveoil.com>",
@@ -171,12 +240,12 @@ export async function POST(req: Request) {
               </table>
 
               <div style="margin-bottom:22px;">
-                <div style="font-size:18px; font-weight:700; color:#111827; margin-bottom:12px;">Experience & Fit</div>
+                <div style="font-size:18px; font-weight:700; color:#111827; margin-bottom:12px;">Work History</div>
+                ${workHistoryHtml}
+              </div>
 
-                <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px; background:#f9fafb;">
-                  <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;">Previous Work Experience</div>
-                  <div style="font-size:15px; line-height:1.6; white-space:pre-wrap;">${data.work_experience ?? ""}</div>
-                </div>
+              <div style="margin-bottom:22px;">
+                <div style="font-size:18px; font-weight:700; color:#111827; margin-bottom:12px;">Experience & Fit</div>
 
                 <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px; background:#ffffff;">
                   <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;">Computer / Retail System Experience</div>
