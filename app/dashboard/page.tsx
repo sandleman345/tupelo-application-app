@@ -12,8 +12,9 @@ export type Application = {
   address: string;
   phone: string;
   email: string;
+  referred_by: string;
   preferred_location: string;
-  availability: string;
+  employment_type: string;
   weekend_availability: string;
   start_date: string;
   work_experience: string;
@@ -63,7 +64,7 @@ export default async function DashboardPage() {
   const applications = await getApplications();
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100 px-4 py-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

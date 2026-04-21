@@ -46,8 +46,9 @@ export async function POST(req: Request) {
       address: data.address,
       phone: formatPhone(data.phone ?? ""),
       email: data.email,
+      referred_by: data.referred_by,
       preferred_location: data.preferred_location,
-      availability: data.availability,
+      employment_type: data.employment_type,
       weekend_availability: data.weekend_availability,
       start_date: data.start_date,
       work_experience: data.work_experience,
@@ -74,16 +75,16 @@ export async function POST(req: Request) {
       data.company === "Tupelo Tea" ? "#d97706" : "#4d7c0f";
 
     const dashboardUrl =
-  process.env.NODE_ENV === "production"
-    ? "https://tupelo-application-app.vercel.app/dashboard"
-    : "http://localhost:3000/dashboard";
+      process.env.NODE_ENV === "production"
+        ? "https://tupelo-application-app.vercel.app/dashboard"
+        : "http://localhost:3000/dashboard";
 
     const emailResult = await resend.emails.send({
       from: "Applications <jobs@blueridgeoliveoil.com>",
       to: [
-  "tom@blueridgeoliveoil.com",
-  "donna@blueridgeoliveoil.com"
-],
+        "tom@blueridgeoliveoil.com",
+        "donna@blueridgeoliveoil.com",
+      ],
       subject: `New Application - ${data.full_name}`,
       html: `
         <div style="margin:0; padding:24px; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif; color:#111827;">
@@ -128,6 +129,12 @@ export async function POST(req: Request) {
                           <div style="font-size:15px; font-weight:600; margin-top:4px;">${data.address ?? ""}</div>
                         </td>
                       </tr>
+                      <tr>
+                        <td colspan="2" style="padding:10px 12px; border:1px solid #e5e7eb; background:#f9fafb;">
+                          <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em;">Referred By</div>
+                          <div style="font-size:15px; font-weight:600; margin-top:4px;">${data.referred_by ?? "—"}</div>
+                        </td>
+                      </tr>
                     </table>
                   </td>
                 </tr>
@@ -150,8 +157,8 @@ export async function POST(req: Request) {
                       </tr>
                       <tr>
                         <td style="padding:10px 12px; border:1px solid #e5e7eb;">
-                          <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em;">Availability</div>
-                          <div style="font-size:15px; font-weight:600; margin-top:4px;">${data.availability ?? ""}</div>
+                          <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em;">Employment Type</div>
+                          <div style="font-size:15px; font-weight:600; margin-top:4px;">${data.employment_type ?? ""}</div>
                         </td>
                         <td style="padding:10px 12px; border:1px solid #e5e7eb;">
                           <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em;">Weekend Availability</div>

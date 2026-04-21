@@ -4,16 +4,7 @@ import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 
 type Company = "Blue Ridge Olive Oil Company" | "Tupelo Tea" | "";
-
-const AVAILABILITY_OPTIONS = [
-  "Full Time",
-  "Part Time",
-  "Weekdays",
-  "Weekends",
-  "Mornings",
-  "Afternoons",
-  "Evenings",
-] as const;
+type EmploymentType = "Full-Time" | "Part-Time" | "";
 
 type FormData = {
   company: Company;
@@ -24,8 +15,9 @@ type FormData = {
   zip: string;
   phone: string;
   email: string;
+  referred_by: string;
   preferred_location: string;
-  availability: string[];
+  employment_type: EmploymentType;
   weekend_availability: string;
   start_date: string;
   work_experience: string;
@@ -47,8 +39,9 @@ const initialForm: FormData = {
   zip: "",
   phone: "",
   email: "",
+  referred_by: "",
   preferred_location: "",
-  availability: [],
+  employment_type: "",
   weekend_availability: "",
   start_date: "",
   work_experience: "",
@@ -87,10 +80,12 @@ export default function Home() {
         logo: "/brooc-logo.png",
         accent: "bg-lime-700",
         light: "bg-lime-50",
+        section: "bg-lime-50 border-lime-200",
         border: "border-lime-200",
         text: "text-lime-900",
         ring: "focus:border-lime-700",
         button: "bg-lime-700 hover:bg-lime-800",
+        softCard: "border-lime-100 bg-lime-50/60",
       };
     }
 
@@ -100,10 +95,12 @@ export default function Home() {
         logo: "/tupelo-logo.png",
         accent: "bg-amber-600",
         light: "bg-amber-50",
+        section: "bg-amber-50 border-amber-200",
         border: "border-amber-200",
         text: "text-amber-900",
         ring: "focus:border-amber-600",
         button: "bg-amber-600 hover:bg-amber-700",
+        softCard: "border-amber-100 bg-amber-50/60",
       };
     }
 
@@ -112,15 +109,18 @@ export default function Home() {
       logo: "",
       accent: "bg-gray-800",
       light: "bg-white",
+      section: "bg-gray-50 border-gray-200",
       border: "border-gray-200",
       text: "text-gray-900",
       ring: "focus:border-gray-800",
       button: "bg-gray-800 hover:bg-gray-900",
+      softCard: "border-gray-200 bg-gray-50",
     };
   }, [form.company]);
 
-  const inputClass = `w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-black placeholder-gray-500 outline-none sm:p-3 ${theme.ring}`;
+  const inputClass = `w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-black outline-none sm:p-3 ${theme.ring}`;
   const labelClass = "mb-2 block text-sm font-semibold text-gray-700";
+  const sectionCardClass = `rounded-2xl border p-4 sm:p-5 ${theme.section}`;
 
   const updateField = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -151,15 +151,6 @@ export default function Home() {
     }
   };
 
-  const toggleAvailability = (option: string) => {
-    setForm((prev) => ({
-      ...prev,
-      availability: prev.availability.includes(option)
-        ? prev.availability.filter((item) => item !== option)
-        : [...prev.availability, option],
-    }));
-  };
-
   const chooseCompany = (company: Company) => {
     setForm({
       ...initialForm,
@@ -183,7 +174,7 @@ export default function Home() {
     form.email.trim();
 
   const canContinueStep2 =
-    form.availability.length > 0 &&
+    form.employment_type.trim() &&
     form.weekend_availability.trim() &&
     form.start_date.trim() &&
     (form.company === "Tupelo Tea" || form.preferred_location.trim());
@@ -216,7 +207,6 @@ export default function Home() {
         address: `${form.street}, ${form.city}, ${form.state} ${form.zip}`,
         preferred_location:
           form.company === "Tupelo Tea" ? "Blue Ridge" : form.preferred_location,
-        availability: form.availability.join(", "),
       };
 
       const response = await fetch("/api/submit-application", {
@@ -371,7 +361,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 px-4 py-6 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100 px-4 py-6 sm:py-8">
       <div
         className={`mx-auto max-w-3xl rounded-3xl border ${theme.border} bg-white p-5 shadow-xl sm:p-8`}
       >
@@ -392,343 +382,370 @@ export default function Home() {
 
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {step === 1 && (
-            <>
-              <div>
-                <label className={labelClass}>Full Name</label>
-                <input
-                  name="full_name"
-                  value={form.full_name}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                />
-              </div>
+            <div className={sectionCardClass}>
+              <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
+                Contact Information
+              </h2>
 
-              <div>
-                <label className={labelClass}>Street Address</label>
-                <input
-                  name="street"
-                  value={form.street}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                  autoComplete="street-address"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className="space-y-5">
                 <div>
-                  <label className={labelClass}>City</label>
+                  <label className={labelClass}>Full Name</label>
                   <input
-                    name="city"
-                    value={form.city}
+                    name="full_name"
+                    value={form.full_name}
                     onChange={updateField}
                     className={inputClass}
                     required
-                    autoComplete="address-level2"
                   />
                 </div>
 
                 <div>
-                  <label className={labelClass}>State</label>
+                  <label className={labelClass}>Street Address</label>
                   <input
-                    name="state"
-                    value={form.state}
+                    name="street"
+                    value={form.street}
                     onChange={updateField}
                     className={inputClass}
                     required
-                    maxLength={2}
-                    autoComplete="address-level1"
+                    autoComplete="street-address"
                   />
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                  <div>
+                    <label className={labelClass}>City</label>
+                    <input
+                      name="city"
+                      value={form.city}
+                      onChange={updateField}
+                      className={inputClass}
+                      required
+                      autoComplete="address-level2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>State</label>
+                    <input
+                      name="state"
+                      value={form.state}
+                      onChange={updateField}
+                      className={inputClass}
+                      required
+                      maxLength={2}
+                      autoComplete="address-level1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Zip Code</label>
+                    <input
+                      name="zip"
+                      value={form.zip}
+                      onChange={handleZipChange}
+                      className={inputClass}
+                      required
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      maxLength={5}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>Phone Number</label>
+                    <input
+                      ref={phoneRef}
+                      name="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={updateField}
+                      className={inputClass}
+                      required
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Email Address</label>
+                    <input
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={updateField}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className={labelClass}>Zip Code</label>
+                  <label className={labelClass}>Referred By</label>
                   <input
-                    name="zip"
-                    value={form.zip}
-                    onChange={handleZipChange}
+                    name="referred_by"
+                    value={form.referred_by}
+                    onChange={updateField}
                     className={inputClass}
-                    required
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                    maxLength={5}
+                    placeholder="Employee, friend, customer, walk-in, etc."
                   />
                 </div>
               </div>
-
-              <div>
-                <label className={labelClass}>Phone Number</label>
-                <input
-                  ref={phoneRef}
-                  name="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                  inputMode="tel"
-                  autoComplete="tel"
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>Email Address</label>
-                <input
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                />
-              </div>
-            </>
+            </div>
           )}
 
           {step === 2 && (
-            <>
-              {form.company === "Blue Ridge Olive Oil Company" ? (
+            <div className={sectionCardClass}>
+              <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
+                Position Details
+              </h2>
+
+              <div className="space-y-5">
+                {form.company === "Blue Ridge Olive Oil Company" ? (
+                  <div>
+                    <label className={labelClass}>Preferred Location</label>
+                    <select
+                      name="preferred_location"
+                      value={form.preferred_location}
+                      onChange={updateField}
+                      className={inputClass}
+                      required
+                    >
+                      <option value="">Select a location</option>
+                      <option value="Blue Ridge">Blue Ridge</option>
+                      <option value="Ellijay">Ellijay</option>
+                      <option value="Blairsville">Blairsville</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={labelClass}>Location</label>
+                    <input
+                      value="Blue Ridge"
+                      className={`${inputClass} bg-gray-50 text-gray-700`}
+                      readOnly
+                    />
+                  </div>
+                )}
+
+                <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
+                  <label className={labelClass}>Employment Type</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {["Full-Time", "Part-Time"].map((option) => (
+                      <label
+                        key={option}
+                        className="flex items-center gap-3 rounded-xl border border-white/70 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-sm"
+                      >
+                        <input
+                          type="radio"
+                          name="employment_type"
+                          value={option}
+                          checked={form.employment_type === option}
+                          onChange={updateField}
+                          className="h-4 w-4"
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
-                  <label className={labelClass}>Preferred Location</label>
+                  <label className={labelClass}>
+                    Are You Available to Work Weekends?
+                  </label>
                   <select
-                    name="preferred_location"
-                    value={form.preferred_location}
+                    name="weekend_availability"
+                    value={form.weekend_availability}
                     onChange={updateField}
                     className={inputClass}
                     required
                   >
-                    <option value="">Select a location</option>
-                    <option value="Blue Ridge">Blue Ridge</option>
-                    <option value="Ellijay">Ellijay</option>
-                    <option value="Blairsville">Blairsville</option>
+                    <option value="">Select one</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <option value="Sometimes">Sometimes</option>
                   </select>
                 </div>
-              ) : (
+
                 <div>
-                  <label className={labelClass}>Location</label>
+                  <label className={labelClass}>Available Start Date</label>
                   <input
-                    value="Blue Ridge"
-                    className={`${inputClass} bg-gray-50 text-gray-700`}
-                    readOnly
+                    name="start_date"
+                    type="date"
+                    value={form.start_date}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
                   />
                 </div>
-              )}
-
-              <div>
-                <label className={labelClass}>Availability</label>
-                <div className="grid grid-cols-1 gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 sm:grid-cols-2 sm:p-4">
-                  {AVAILABILITY_OPTIONS.map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm text-gray-700 shadow-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.availability.includes(option)}
-                        onChange={() => toggleAvailability(option)}
-                        className="h-4 w-4"
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
-
-              <div>
-                <label className={labelClass}>
-                  Are You Available to Work Weekends?
-                </label>
-                <select
-                  name="weekend_availability"
-                  value={form.weekend_availability}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select one</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                  <option value="Sometimes">Sometimes</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Available Start Date</label>
-                <input
-                  name="start_date"
-                  type="date"
-                  value={form.start_date}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                />
-              </div>
-            </>
+            </div>
           )}
 
           {step === 3 && (
-            <>
-              <div>
-                <label className={labelClass}>Previous Work Experience</label>
-                <textarea
-                  name="work_experience"
-                  value={form.work_experience}
-                  onChange={updateField}
-                  rows={5}
-                  className={inputClass}
-                  required
-                />
-              </div>
+            <div className={sectionCardClass}>
+              <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
+                Experience & Background
+              </h2>
 
-              <div>
-                <label className={labelClass}>
-                  Computer / Retail System Experience
-                </label>
-                <textarea
-                  name="computer_experience"
-                  value={form.computer_experience}
-                  onChange={updateField}
-                  rows={4}
-                  placeholder="Please tell us about your comfort with computers, POS systems, or retail operations."
-                  className={inputClass}
-                  required
-                />
-              </div>
+              <div className="space-y-5">
+                <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
+                  <label className={labelClass}>Previous Work Experience</label>
+                  <textarea
+                    name="work_experience"
+                    value={form.work_experience}
+                    onChange={updateField}
+                    rows={5}
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className={labelClass}>
-                  Why Would You Like to Work for{" "}
-                  {form.company === "Tupelo Tea"
-                    ? "Tupelo Tea"
-                    : "Blue Ridge Olive Oil Company"}
-                  ?
-                </label>
-                <textarea
-                  name="why_company"
-                  value={form.why_company}
-                  onChange={updateField}
-                  rows={4}
-                  className={inputClass}
-                  required
-                />
+                <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
+                  <label className={labelClass}>
+                    Computer / Retail System Experience
+                  </label>
+                  <textarea
+                    name="computer_experience"
+                    value={form.computer_experience}
+                    onChange={updateField}
+                    rows={4}
+                    placeholder="Please tell us about your comfort with computers, POS systems, or retail operations."
+                    className={inputClass}
+                    required
+                  />
+                </div>
+
+                <div className={`rounded-2xl border p-4 ${theme.softCard}`}>
+                  <label className={labelClass}>
+                    Why Would You Like to Work for{" "}
+                    {form.company === "Tupelo Tea"
+                      ? "Tupelo Tea"
+                      : "Blue Ridge Olive Oil Company"}
+                    ?
+                  </label>
+                  <textarea
+                    name="why_company"
+                    value={form.why_company}
+                    onChange={updateField}
+                    rows={4}
+                    className={inputClass}
+                    required
+                  />
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {step === 4 && (
-            <>
-              <div
-                className={`rounded-2xl border ${theme.border} ${theme.light} p-4 sm:p-5`}
-              >
-                <h3 className={`mb-3 text-lg font-bold ${theme.text}`}>
-                  Preliminary Screening
-                </h3>
-                <p className="text-sm text-gray-700">
-                  Before applying, please review and answer the following.
-                </p>
-              </div>
+            <div className={sectionCardClass}>
+              <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
+                Preliminary Screening
+              </h2>
 
-              <div>
-                <label className={labelClass}>
-                  Do you enjoy interacting with the public?
-                </label>
-                <select
-                  name="enjoys_public_interaction"
-                  value={form.enjoys_public_interaction}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select one</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
+              <div className="space-y-5">
+                <div>
+                  <label className={labelClass}>
+                    Do you enjoy interacting with the public?
+                  </label>
+                  <select
+                    name="enjoys_public_interaction"
+                    value={form.enjoys_public_interaction}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
+                  >
+                    <option value="">Select one</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className={labelClass}>
-                  Can you stand, stoop, reach, and lift up to 35 lbs?
-                </label>
-                <select
-                  name="physical_requirements_acknowledged"
-                  value={form.physical_requirements_acknowledged}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select one</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
+                <div>
+                  <label className={labelClass}>
+                    Can you stand, stoop, reach, and lift up to 35 lbs?
+                  </label>
+                  <select
+                    name="physical_requirements_acknowledged"
+                    value={form.physical_requirements_acknowledged}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
+                  >
+                    <option value="">Select one</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className={labelClass}>
-                  Do you understand this is a non-smoking work environment and
-                  that smoking is not permitted on the premises or during working
-                  hours?
-                </label>
-                <select
-                  name="non_smoking_acknowledged"
-                  value={form.non_smoking_acknowledged}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select one</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
+                <div>
+                  <label className={labelClass}>
+                    Do you understand this is a non-smoking work environment and
+                    that smoking is not permitted on the premises or during working
+                    hours?
+                  </label>
+                  <select
+                    name="non_smoking_acknowledged"
+                    value={form.non_smoking_acknowledged}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
+                  >
+                    <option value="">Select one</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {step === 5 && (
-            <>
-              <div
-                className={`rounded-2xl border ${theme.border} ${theme.light} p-4 sm:p-5`}
-              >
-                <h3 className={`mb-2 text-lg font-bold ${theme.text}`}>
-                  Final Review
-                </h3>
+            <div className={sectionCardClass}>
+              <h2 className={`mb-4 text-lg font-bold ${theme.text}`}>
+                Final Review
+              </h2>
+
+              <div className="space-y-5">
                 <p className="text-sm text-gray-700">
                   By signing below, you confirm that the information provided is
                   true to the best of your knowledge.
                 </p>
-              </div>
 
-              <div>
-                <label className={labelClass}>Typed Signature</label>
-                <input
-                  name="signature"
-                  value={form.signature}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                />
-              </div>
+                <div>
+                  <label className={labelClass}>Typed Signature</label>
+                  <input
+                    name="signature"
+                    value={form.signature}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className={labelClass}>Application Date</label>
-                <input
-                  name="application_date"
-                  type="date"
-                  value={form.application_date}
-                  onChange={updateField}
-                  className={inputClass}
-                  required
-                />
-              </div>
+                <div>
+                  <label className={labelClass}>Application Date</label>
+                  <input
+                    name="application_date"
+                    type="date"
+                    value={form.application_date}
+                    onChange={updateField}
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 sm:p-5">
-                <p>
-                  Qualified applicants may be contacted by Donna Harper for a
-                  preliminary phone interview, with a physical interview to
-                  follow.
-                </p>
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm text-gray-700">
+                  <p>
+                    Qualified applicants may be contacted by Donna Harper for a
+                    preliminary phone interview, with a physical interview to
+                    follow.
+                  </p>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           <div className="flex flex-col gap-3 pt-3 sm:flex-row sm:justify-between sm:pt-4">

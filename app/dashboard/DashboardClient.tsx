@@ -20,12 +20,18 @@ function formatDateTime(value?: string) {
 function DetailRow({
   label,
   value,
+  tinted = false,
 }: {
   label: string;
   value?: string | null;
+  tinted?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <div
+      className={`rounded-xl border p-4 ${
+        tinted ? "border-lime-100 bg-lime-50" : "border-gray-200 bg-gray-50"
+      }`}
+    >
       <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
         {label}
       </div>
@@ -36,9 +42,24 @@ function DetailRow({
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+function Badge({
+  children,
+  variant = "default",
+}: {
+  children: React.ReactNode;
+  variant?: "default" | "full" | "part" | "referral";
+}) {
+  const classes =
+    variant === "full"
+      ? "border-lime-200 bg-lime-50 text-lime-800"
+      : variant === "part"
+      ? "border-amber-200 bg-amber-50 text-amber-800"
+      : variant === "referral"
+      ? "border-blue-200 bg-blue-50 text-blue-800"
+      : "border-gray-200 bg-white text-gray-700";
+
   return (
-    <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700">
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${classes}`}>
       {children}
     </span>
   );
@@ -70,6 +91,8 @@ export default function DashboardClient({
         app.phone,
         app.company,
         app.preferred_location,
+        app.referred_by,
+        app.employment_type,
       ]
         .filter(Boolean)
         .join(" ")
@@ -81,13 +104,35 @@ export default function DashboardClient({
     });
   }, [applications, companyFilter, search]);
 
+  const fullTimeCount = applications.filter(
+    (app) => app.employment_type === "Full-Time"
+  ).length;
+
+  const partTimeCount = applications.filter(
+    (app) => app.employment_type === "Part-Time"
+  ).length;
+
   return (
     <>
-      <div className="mb-6 grid gap-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:grid-cols-3">
+      <div className="mb-6 grid gap-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
           <div className="text-sm text-gray-500">Total Applications</div>
           <div className="mt-1 text-3xl font-bold text-gray-900">
             {applications.length}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-lime-200 bg-lime-50 p-4">
+          <div className="text-sm text-lime-700">Full-Time</div>
+          <div className="mt-1 text-3xl font-bold text-lime-900">
+            {fullTimeCount}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="text-sm text-amber-700">Part-Time</div>
+          <div className="mt-1 text-3xl font-bold text-amber-900">
+            {partTimeCount}
           </div>
         </div>
 
@@ -101,13 +146,6 @@ export default function DashboardClient({
             }
           </div>
         </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div className="text-sm text-gray-500">Tupelo Tea</div>
-          <div className="mt-1 text-3xl font-bold text-gray-900">
-            {applications.filter((app) => app.company === "Tupelo Tea").length}
-          </div>
-        </div>
       </div>
 
       <div className="mb-6 grid gap-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:grid-cols-[1fr_220px]">
@@ -118,7 +156,7 @@ export default function DashboardClient({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, phone, or location"
+            placeholder="Search by name, email, location, referral, or employment type"
             className="w-full rounded-xl border border-gray-300 bg-white p-3 text-black outline-none focus:border-gray-800"
           />
         </div>
@@ -161,7 +199,15 @@ export default function DashboardClient({
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge>{app.company || "—"}</Badge>
                       <Badge>{app.preferred_location || "No location"}</Badge>
-                      <Badge>Start: {formatDate(app.start_date)}</Badge>
+                      {app.employment_type === "Full-Time" && (
+                        <Badge variant="full">Full-Time</Badge>
+                      )}
+                      {app.employment_type === "Part-Time" && (
+                        <Badge variant="part">Part-Time</Badge>
+                      )}
+                      {app.referred_by && (
+                        <Badge variant="referral">Referred</Badge>
+                      )}
                     </div>
                   </div>
 
@@ -171,7 +217,7 @@ export default function DashboardClient({
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 text-sm text-gray-700 md:grid-cols-3">
+                <div className="mt-4 grid gap-3 text-sm text-gray-700 md:grid-cols-4">
                   <div>
                     <span className="font-semibold text-gray-900">Email:</span>{" "}
                     {app.email || "—"}
@@ -181,18 +227,20 @@ export default function DashboardClient({
                     {app.phone || "—"}
                   </div>
                   <div>
-                    <span className="font-semibold text-gray-900">
-                      Weekend Availability:
-                    </span>{" "}
-                    {app.weekend_availability || "—"}
+                    <span className="font-semibold text-gray-900">Employment:</span>{" "}
+                    {app.employment_type || "—"}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-900">Referred By:</span>{" "}
+                    {app.referred_by || "—"}
                   </div>
                 </div>
               </summary>
 
               <div className="border-t border-gray-200 p-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <DetailRow label="Full Name" value={app.full_name} />
-                  <DetailRow label="Company" value={app.company} />
+                  <DetailRow label="Full Name" value={app.full_name} tinted />
+                  <DetailRow label="Company" value={app.company} tinted />
                   <DetailRow label="Email" value={app.email} />
                   <DetailRow label="Phone" value={app.phone} />
                   <DetailRow label="Address" value={app.address} />
@@ -200,11 +248,16 @@ export default function DashboardClient({
                     label="Preferred Location"
                     value={app.preferred_location}
                   />
-                  <DetailRow label="Availability" value={app.availability} />
+                  <DetailRow
+                    label="Employment Type"
+                    value={app.employment_type}
+                    tinted
+                  />
                   <DetailRow
                     label="Weekend Availability"
                     value={app.weekend_availability}
                   />
+                  <DetailRow label="Referred By" value={app.referred_by} tinted />
                   <DetailRow label="Start Date" value={formatDate(app.start_date)} />
                   <DetailRow
                     label="Enjoys Public Interaction"
@@ -229,6 +282,7 @@ export default function DashboardClient({
                   <DetailRow
                     label="Previous Work Experience"
                     value={app.work_experience}
+                    tinted
                   />
                   <DetailRow
                     label="Computer / Retail System Experience"
@@ -237,6 +291,7 @@ export default function DashboardClient({
                   <DetailRow
                     label="Why They Want to Work Here"
                     value={app.why_company}
+                    tinted
                   />
                 </div>
               </div>
