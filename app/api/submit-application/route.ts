@@ -129,7 +129,7 @@ export async function POST(req: Request) {
       workHistoryRows.length > 0
         ? workHistoryRows
             .map(
-              (job, index) => `
+              (job: any, index: number) => `
                 <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px; background:${index % 2 === 0 ? "#f9fafb" : "#ffffff"};">
                   <div style="font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;">Employer ${index + 1}</div>
                   <p style="margin:4px 0;"><strong>Company:</strong> ${job.company_name || "—"}</p>
